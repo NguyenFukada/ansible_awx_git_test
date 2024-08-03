@@ -1,0 +1,34 @@
+---
+- name: Install Nginx on Windows 10
+  hosts: windows
+  tasks:
+    - name: Download Nginx
+      win_get_url:
+        url: https://nginx.org/download/nginx-1.23.3.zip
+        dest: C:\nginx.zip
+
+    - name: Extract Nginx
+      win_unzip:
+        src: C:\nginx.zip
+        dest: C:\nginx
+        remote_src: yes
+
+    - name: Create a directory for Nginx service
+      win_file:
+        path: C:\nginx
+        state: directory
+
+    - name: Install Nginx as a Windows service
+      win_command: |
+        powershell.exe -Command "New-Service -Name nginx -BinaryFilePathName 'C:\nginx\nginx-1.23.3\nginx.exe' -StartupType Automatic"
+      ignore_errors: yes
+
+    - name: Start Nginx service
+      win_service:
+        name: nginx
+        state: started
+
+    - name: Verify Nginx is running
+      win_command: |
+        powershell.exe -Command "Get-Service -Name nginx"
+
