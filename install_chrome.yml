@@ -1,0 +1,32 @@
+---
+- name: Install Google Chrome on Ubuntu
+  hosts: all
+  become: yes
+  tasks:
+    - name: Ensure dependencies are installed
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - wget
+        state: present
+        update_cache: yes
+
+    - name: Add Google Chrome repository key
+      apt_key:
+        url: https://dl.google.com/linux/linux_signing_key.pub
+        state: present
+
+    - name: Add Google Chrome repository
+      apt_repository:
+        repo: deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main
+        state: present
+
+    - name: Update apt package index
+      apt:
+        update_cache: yes
+
+    - name: Install Google Chrome
+      apt:
+        name: google-chrome-stable
+        state: present
