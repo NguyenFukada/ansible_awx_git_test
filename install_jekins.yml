@@ -38,10 +38,7 @@
         enabled: yes
 
     - name: Allow traffic on port 8080
-      ufw:
-        rule: allow
-        port: '8080'
-        proto: tcp
+      command: ufw allow 8080/tcp
 
     - name: Reload UFW to apply changes
       command: ufw reload
