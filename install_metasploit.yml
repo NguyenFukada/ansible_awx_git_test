@@ -1,63 +1,39 @@
 ---
-- hosts: all
+- name: Install Metasploit Framework
+  hosts: all
   become: yes
   tasks:
 
-    - name: Update apt package index
+    - name: Install dependencies
       apt:
-        update_cache: yes
-      tags:
-        - update
-
-    - name: Install dependencies for Metasploit
-      apt:
-        name: "{{ item }}"
+        name:
+          - curl
+          - gnupg2
+          - postgresql
+          - postgresql-contrib
         state: present
-      loop:
-        - curl
-        - gnupg2
-        - postgresql
-        - libsqlite3-dev
-        - libgmp-dev
-        - zlib1g-dev
-      tags:
-        - install
-        - dependencies
+        update_cache: yes
+
+    - name: Add Metasploit repository signing key
+      apt_key:
+        url: https://apt.metasploit.com/metasploit-framework.gpg.key
+        state: present
 
     - name: Add the Metasploit repository
-      shell: curl https://raw.githubusercontent.com/rapid7/metasploit-framework/master/msfinstall | sh
-      tags:
-        - install
-        - metasploit
+      apt_repository:
+        repo: "deb http://apt.metasploit.com/ bionic main"
+        state: present
 
-    - name: Start PostgreSQL service
-      service:
-        name: postgresql
-        state: started
-        enabled: yes
-      tags:
-        - start
-        - database
+    - name: Update apt cache
+      apt:
+        update_cache: yes
 
-    - name: Initialize Metasploit database
-      command: msfdb init
-      tags:
-        - init
-        - metasploit
+    - name: Install Metasploit Framework
+      apt:
+        name: metasploit-framework
+        state: present
 
-    - name: Test Metasploit installation
-      command: msfconsole -q -x "version; exit"
-      register: metasploit_version
-      changed_when: false
-      tags:
-        - test
-        - metasploit
-
-    - name: Display Metasploit version
-      debug:
-        msg: "Metasploit version: {{ metasploit_version.stdout }}"
-      when: metasploit_version is succeeded
-      tags:
-        - test
-        - metasploit
-
+    - name: Initialize Metasploit Database
+      shell: msfdb init
+      args:
+        executable: /bin/bash
