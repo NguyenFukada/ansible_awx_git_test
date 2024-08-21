@@ -1,0 +1,63 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+
+    - name: Update apt package index
+      apt:
+        update_cache: yes
+      tags:
+        - update
+
+    - name: Install dependencies for Metasploit
+      apt:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - curl
+        - gnupg2
+        - postgresql
+        - libsqlite3-dev
+        - libgmp-dev
+        - zlib1g-dev
+      tags:
+        - install
+        - dependencies
+
+    - name: Add the Metasploit repository
+      shell: curl https://raw.githubusercontent.com/rapid7/metasploit-framework/master/msfinstall | sh
+      tags:
+        - install
+        - metasploit
+
+    - name: Start PostgreSQL service
+      service:
+        name: postgresql
+        state: started
+        enabled: yes
+      tags:
+        - start
+        - database
+
+    - name: Initialize Metasploit database
+      command: msfdb init
+      tags:
+        - init
+        - metasploit
+
+    - name: Test Metasploit installation
+      command: msfconsole -q -x "version; exit"
+      register: metasploit_version
+      changed_when: false
+      tags:
+        - test
+        - metasploit
+
+    - name: Display Metasploit version
+      debug:
+        msg: "Metasploit version: {{ metasploit_version.stdout }}"
+      when: metasploit_version is succeeded
+      tags:
+        - test
+        - metasploit
+
