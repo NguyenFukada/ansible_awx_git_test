@@ -11,27 +11,53 @@
           - gnupg2
           - postgresql
           - postgresql-contrib
+          - wget
+          - gnupg
+          - software-properties-common
         state: present
         update_cache: yes
 
-    - name: Add Metasploit repository signing key
+    - name: Add RVM GPG keys (for Ruby installation)
       apt_key:
-        url: https://apt.metasploit.com/metasploit-framework.gpg.key
+        url: https://rvm.io/mpapis.asc
         state: present
 
-    - name: Add the Metasploit repository
-      apt_repository:
-        repo: "deb http://apt.metasploit.com/ bionic main"
-        state: present
+    - name: Add the RVM repository (for Ruby installation)
+      shell: |
+        apt-add-repository -y ppa:rael-gc/rvm
+      args:
+        executable: /bin/bash
 
-    - name: Update apt cache
+    - name: Install RVM (Ruby Version Manager)
       apt:
-        update_cache: yes
-
-    - name: Install Metasploit Framework
-      apt:
-        name: metasploit-framework
+        name: rvm
         state: present
+
+    - name: Install Ruby using RVM
+      shell: |
+        source /etc/profile.d/rvm.sh
+        rvm install ruby --default
+      args:
+        executable: /bin/bash
+
+    - name: Download Metasploit Framework
+      git:
+        repo: https://github.com/rapid7/metasploit-framework.git
+        dest: /opt/metasploit-framework
+
+    - name: Install required gems for Metasploit
+      shell: |
+        cd /opt/metasploit-framework
+        gem install bundler
+        bundle install
+      args:
+        executable: /bin/bash
+
+    - name: Create symbolic link to msfconsole
+      file:
+        src: /opt/metasploit-framework/msfconsole
+        dest: /usr/local/bin/msfconsole
+        state: link
 
     - name: Initialize Metasploit Database
       shell: msfdb init
