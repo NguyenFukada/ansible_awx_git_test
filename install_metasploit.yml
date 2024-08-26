@@ -1,4 +1,23 @@
 ---
+- name: Clean up duplicate Google Chrome apt sources
+  hosts: all
+  become: yes
+  tasks:
+    - name: Remove duplicate Google Chrome apt sources
+      lineinfile:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /etc/apt/sources.list.d/dl_google_com_linux_chrome_deb.list
+        - /etc/apt/sources.list.d/google-chrome.list
+      ignore_errors: yes
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+
+
 - name: Install Metasploit Framework
   hosts: all
   become: yes
