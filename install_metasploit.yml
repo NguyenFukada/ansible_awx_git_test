@@ -12,29 +12,21 @@
           - postgresql
           - postgresql-contrib
           - wget
-          - gnupg
-          - software-properties-common
+          - git
+          - build-essential
+          - libreadline-dev
+          - libssl-dev
+          - zlib1g-dev
+          - libsqlite3-dev
+          - libpq-dev
         state: present
         update_cache: yes
 
-    - name: Add RVM GPG keys (for Ruby installation)
-      apt_key:
-        url: https://rvm.io/mpapis.asc
-        state: present
-
-    - name: Add the RVM repository (for Ruby installation)
+    - name: Download and Install RVM (Ruby Version Manager)
       shell: |
         apt-add-repository -y ppa:rael-gc/rvm
-      args:
-        executable: /bin/bash
-
-    - name: Install RVM (Ruby Version Manager)
-      apt:
-        name: rvm
-        state: present
-
-    - name: Install Ruby using RVM
-      shell: |
+        apt-get update
+        apt-get install -y rvm
         source /etc/profile.d/rvm.sh
         rvm install ruby --default
       args:
@@ -45,7 +37,7 @@
         repo: https://github.com/rapid7/metasploit-framework.git
         dest: /opt/metasploit-framework
 
-    - name: Install required gems for Metasploit
+    - name: Install required Ruby gems for Metasploit
       shell: |
         cd /opt/metasploit-framework
         gem install bundler
